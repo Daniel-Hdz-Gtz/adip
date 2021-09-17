@@ -1,0 +1,1108 @@
+---
+title: "Evaluación ADIP"
+author: "Daniel Alfonso Hernández Gutiérrez"
+institute: " "
+date: "16 de septimebre de 2021"
+mathspec: true
+output:
+  xaringan::moon_reader:
+    seal: false
+    chakra: "https://remarkjs.com/downloads/remark-latest.min.js"
+    lib_dir: libs
+    self_contained: true   
+    nature:
+      highlightLines: true
+      highlightStyle: github
+      countIncrementalSlides: false
+      titleSlideClass: ["middle", "center"]
+      ratio: "16:9"
+      # beforeInit: ["https://platform.twitter.com/widgets.js", "libs/cols_macro.js"]
+      navigation:
+      scroll: false
+    css: [default, "libs/cide.css", metropolis-fonts, "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap-grid.min.css", "https://use.fontawesome.com/releases/v5.7.2/css/all.css", "https://cdn.rawgit.com/jpswalsh/academicons/master/css/academicons.min.css"]
+include-before:
+- '\newcommand\myeq{\stackrel{\mathclap{\normalfont\mbox{s}}}{~}}'
+
+---
+class: title-slide
+
+```{r setup, include=FALSE}
+
+# devtools::install_github("gadenbuie/xaringanExtra")
+
+knitr::opts_chunk$set(echo = FALSE, fig.path = "figures/")
+
+pacman::p_load(tidyverse, foreign, reshape2, psych, qwraps2, forcats, readxl, 
+       broom, lmtest, margins, plm, rdrobust, multiwayvcov,
+       wesanderson, sandwich, stargazer,
+       readstata13, pscore, optmatch, kdensity, MatchIt, bootstrap, matlib,
+       dplyr, modelsummary, sandwich, janitor, pacman, reticulate, magick,tmap,geojsonR, osmdata)
+library(sf)
+library(leaflet)
+
+if (!require("devtools")) {
+    install.packages("devtools")
+}
+devtools::install_github("diegovalle/mxmaps")
+library(mxmaps)
+
+
+
+
+xfun::pkg_load2(c('base64enc', 'htmltools', 'mime'))
+
+
+setwd("C:/Users/danie/OneDrive/Documentos/ADIP")
+
+
+
+# Cargamos librerias asociadas al tema de los gráficos
+library(tidyverse)
+library(cowplot)
+library(showtext)
+
+# font_add_google("Roboto Mono", "Roboto Mono")
+# font_add_google("Open Sans", "Open Sans")
+# font_add_google("Special Elite", "Special Elite")
+# font_add_google("Raleway")
+# font_add_google("Poppins")
+
+
+# Ajustamos el tema de ggplot 
+theme_set(theme_minimal(base_family = "Roboto Mono"))
+theme_update(plot.title = element_text(hjust = 0.5),
+  plot.background = element_rect(fill = "#fff5f9", color = "#fc2474"),
+  panel.background = element_rect(fill = NA, color = "#000000"),
+  panel.border = element_rect(fill = NA, color = "#000000"),
+  # panel.grid.major = element_line(colour = "grey50"),
+  panel.grid.major.x = element_blank(),
+  panel.grid.minor = element_line(colour = "grey50"),
+  # axis.text.x = element_blank(),
+  # axis.text.y = element_text(size = 10),
+  # axis.ticks = element_blank(),
+   axis.title.y = element_text(size = 13, margin = margin(r = 10)),
+   legend.title = element_text(size = 9),
+  plot.caption = element_text(
+    family = "Special Elite",
+    size = 10,
+    color = "black",
+    face = "bold",
+    hjust = .5  )  )
+
+
+library(extrafont)
+
+theme_elegante <- function(base_size = 10,
+                           base_family = "Raleway"
+                           )
+    {
+    color.background = "#FFFFFF" # Chart Background
+    color.grid.major = "#D9D9D9" # Chart Gridlines
+    color.axis.text = "#666666" # 
+    color.axis.title = "#666666" # 
+    color.title = "#666666"
+    color.subtitle = "#666666"
+    strip.background.color = '#9999CC'
+    
+    ret <-
+        theme_bw(base_size=base_size) +
+        
+        theme(panel.background=element_rect(fill=color.background, color=color.background)) +
+        theme(plot.background=element_rect(fill=color.background, color=color.background)) +
+        theme(panel.border=element_rect(color=color.background)) +
+        
+        # Format the grid
+        theme(panel.grid.major=element_line(color=color.grid.major,size=.55, linetype="dotted")) +
+        theme(panel.grid.minor=element_line(color=color.grid.major,size=.55, linetype="dotted")) +
+        theme(axis.ticks=element_blank()) +
+        
+        theme(legend.position="none") +
+        theme(legend.background = element_rect(fill=color.background)) +
+        theme(legend.text = element_text(size=base_size-3,color=color.axis.title, family = base_family)) +
+        
+        theme(strip.text.x = element_text(size=base_size,color=color.background, family = base_family)) +
+        theme(strip.text.y = element_text(size=base_size,color=color.background, family = base_family)) +
+        #theme(strip.background = element_rect(fill=strip.background.color, linetype="blank")) +
+        theme(strip.background = element_rect(fill = "grey70", colour = NA)) +
+        # theme(panel.border= element_rect(fill = NA, colour = "grey70", size = rel(1)))+
+        # Set title and axis labels, and format these and tick marks
+        theme(plot.title=element_text(color=color.title, 
+                                      size=20, 
+                                      vjust=1.25, 
+                                      family=base_family, 
+                                      hjust = 0.5
+                                      )) +
+        
+        theme(plot.subtitle=element_text(color=color.subtitle, size=base_size+2, family = base_family,  hjust = 0.5))  +
+        
+        theme(axis.text.x=element_text(size=base_size,color=color.axis.text, family = base_family)) +
+        theme(axis.text.y=element_text(size=base_size,color=color.axis.text, family = base_family)) +
+        theme(text=element_text(size=base_size, color=color.axis.text, family = base_family)) +
+        
+        theme(axis.title.x=element_text(size=base_size+2,color=color.axis.title, vjust=0, family = base_family)) +
+        theme(axis.title.y=element_text(size=base_size+2,color=color.axis.title, vjust=1.25, family = base_family)) +
+        theme(plot.caption=element_text(size=base_size-2,color=color.axis.title, vjust=1.25, family = base_family)) +
+        
+        theme(legend.text=element_text(size=base_size,color=color.axis.text, family = base_family)) +
+        theme(legend.title=element_text(size=base_size,color=color.axis.text, family = base_family)) +
+        theme(legend.key=element_rect(colour = color.background, fill = color.background)) +
+        theme(legend.position="bottom", 
+              legend.box = "horizontal", 
+              legend.title = element_blank(),
+              legend.key.width = unit(.75, "cm"),
+              legend.key.height = unit(.75, "cm"),
+              legend.spacing.x = unit(.25, 'cm'),
+              legend.spacing.y = unit(.25, 'cm'),
+              legend.margin = margin(t=0, r=0, b=0, l=0, unit="cm")) +
+
+        theme(plot.margin = unit(c(.5, .5, .5, .5), "cm"))
+    
+    ret
+}
+
+showtext_auto()
+
+
+
+# cargamos los datos de la pagina de datos.cdmx 
+
+#eliminar el símbolo # de las siguientes líneas para replicar
+
+Carpetas_FGJ<- read.csv(url("https://archivo.datos.cdmx.gob.mx/fiscalia-general-de-justicia/carpetas-de-investigacion-fgj-de-la-ciudad-de-mexico/carpetas_completa_julio_2021.csv"), encoding = "UTF-8")
+# 
+# save(Carpetas_FGJ, file = "Carpetas_FGJ.RData") 
+
+# load("Carpetas_FGJ.RData")
+
+Victimas_FGJ <- read.csv(url("https://archivo.datos.cdmx.gob.mx/fiscalia-general-de-justicia/victimas-en-carpetas-de-investigacion-fgj/victimas_completa_julio_2021.csv"), encoding = "UTF-8")
+# 
+# save(Victimas_FGJ, file = "Victimas_FGJ.RData") 
+
+# load("Victimas_FGJ.RData")
+
+# colonias_cdmx <- read.csv(url("https://datos.cdmx.gob.mx/dataset/04a1900a-0c2f-41ed-94dc-3d2d5bad4065/resource/03368e1e-f05e-4bea-ac17-58fc650f6fee/download/coloniascdmx.csv"), encoding = "UTF-8")
+
+# save(colonias_cdmx, file = "colonias_cdmx.RData") 
+
+# load("colonias_cdmx.RData")
+
+
+#### cargamos los datos de colonias (shapefile)
+# temp <- tempfile()
+# temp2 <- tempfile()
+# 
+# download.file("https://datos.cdmx.gob.mx/dataset/04a1900a-0c2f-41ed-94dc-3d2d5bad4065/resource/f1408eeb-4e97-4548-bc69-61ff83838b1d/download/coloniascdmx.zip", temp)
+# 
+# download.file("https://datos.cdmx.gob.mx/dataset/04a1900a-0c2f-41ed-94dc-3d2d5bad4065/resource/f1408eeb-4e97-4548-bc69-61ff83838b1d/download/coloniascdmx.geojson", temp2)
+# 
+# unzip(zipfile = temp)
+
+library(tidyverse)
+library(data.table)
+library(tmap)
+library(tmaptools)
+library(Hmisc)
+
+
+shp <- st_read("coloniascdmx/coloniascdmx.shp", quiet = TRUE) %>% 
+  rename(clave_colonia = cve_col)
+
+# Guardamos los documentos en csv para su replicación
+
+# write.csv(Victimas_FGJ, file="Victimas_FGJ.csv")
+# write.csv(Carpetas_FGJ, file="Carpetas_FGJ.csv")
+# write.csv(colonias_cdmx, file="colonias_cdmx.csv")
+
+# Filtramos datos por tipo de delito.
+
+Victimas_FGJ <- Victimas_FGJ %>%
+  rename(delito = Delito) %>%
+  rename(categoria_delito = Categoria) 
+
+Victimas_FGJ<-filter(Victimas_FGJ, categoria_delito %in% c("HOMICIDIO DOLOSO", "ROBO DE VEHÍCULO CON Y SIN VIOLENCIA", "ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA", "ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA"))
+Victimas_FGJ<-filter(Victimas_FGJ, delito !=c("ROBO DE VEHICULO DE SERVICIO PARTICULAR SIN VIOLENCIA"))
+Victimas_FGJ<-filter(Victimas_FGJ, delito !=c("ROBO DE MOTOCICLETA SIN VIOLENCIA"))
+Victimas_FGJ<-filter(Victimas_FGJ, delito !=c("ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA"))
+Victimas_FGJ<-filter(Victimas_FGJ, delito !=c("ROBO DE VEHICULO DE SERVICIO OFICIAL SIN VIOLENCIA"))
+Victimas_FGJ<-filter(Victimas_FGJ, delito !=c("ROBO DE VEHICULO DE SERVICIO DE TRANSPORTE SIN VIOLENCIA"))
+Victimas_FGJ<-filter(Victimas_FGJ, delito !=c("ROBO DE MAQUINARIA SIN VIOLENCIA"))
+Victimas_FGJ<-filter(Victimas_FGJ, delito !=c("ROBO DE VEHICULO EN PENSION, TALLER Y AGENCIAS S/V"))
+
+Victimas_FGJ<-filter(Victimas_FGJ, Año_hecho %in% c(2017:2021))
+
+# Corroboramos que tengamos las observaciones de interés
+# unique(Victimas_FGJ$categoria_delito)
+
+Carpetas_FGJ <- filter(Carpetas_FGJ,  categoria_delito %in% c("HOMICIDIO DOLOSO", "ROBO DE VEHÍCULO CON Y SIN VIOLENCIA", "ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA", "ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA"))
+
+Carpetas_FGJ<-filter(Carpetas_FGJ, delito !=c("ROBO DE VEHICULO DE SERVICIO PARTICULAR SIN VIOLENCIA"))
+Carpetas_FGJ<-filter(Carpetas_FGJ, delito !=c("ROBO DE MOTOCICLETA SIN VIOLENCIA"))
+Carpetas_FGJ<-filter(Carpetas_FGJ, delito !=c("ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA"))
+Carpetas_FGJ<-filter(Carpetas_FGJ, delito !=c("ROBO DE VEHICULO DE SERVICIO OFICIAL SIN VIOLENCIA"))
+Carpetas_FGJ<-filter(Carpetas_FGJ, delito !=c("ROBO DE VEHICULO DE SERVICIO DE TRANSPORTE SIN VIOLENCIA"))
+Carpetas_FGJ<-filter(Carpetas_FGJ, delito !=c("ROBO DE MAQUINARIA SIN VIOLENCIA"))
+Carpetas_FGJ<-filter(Carpetas_FGJ, delito !=c("ROBO DE VEHICULO EN PENSION, TALLER Y AGENCIAS S/V"))
+
+Carpetas_FGJ<-filter(Carpetas_FGJ, ao_hechos %in% c(2017:2021))
+
+
+# Corroboramos que tengamos las observaciones de interés
+# unique(Carpetas_FGJ$categoria_delito)
+```
+
+```{r xaringan-tile-view, echo=FALSE}
+xaringanExtra::use_tile_view()
+```
+
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
+```{css, echo = FALSE}
+.huge .remark-code { /*Change made here*/
+  font-size: 200% !important;
+}
+.tiny .remark-code { /*Change made here*/
+  font-size: 60% !important;
+}
+```
+
+.title[
+# Agencia Digital de Innovación Pública. <br> Evaluación: Análisis de datos
+]
+.subtitle[
+## Incidencia Delictiva
+]
+.author[
+### Daniel Alfonso Hernández Gutiérrez
+[<i class="fab fa-linkedin-in"></i>](https://www.linkedin.com/in/danielhernandezeco/) [<i class="fab fa-github"></i>](https://github.com/Daniel-Hdz-Gtz) [<i class="fab fa-twitter"></i>](https://twitter.com/Daniel_Hdz_Gara) [<i class="fab fa-r-project"></i>](https://rpubs.com/DANIEL_0711)
+]
+
+
+.affiliation[
+### Maestro en Economía <br> por Centro de Investigación y Docencia Económicas
+]
+
+Presiona "o" para ver todas las diapositivas a la vez y "h" para más opciones.
+Usa la rueda del ratón (Scroll Mouse) para moverte entre diapositivas y  clic izquierdo para interactuar.
+---
+
+# Evolución de la incidencia delictiva en la Ciudad de México 2017-2021 
+
+.left-column[El presente análisis presenta la evolución de la incidencia delictiva, específicamente cuatro categorías del delito:
+1. Homicidio doloso;
+1. Robo a vehículo con violencia;
+1. Robo a pasajero a bordo de metro, y
+1. Robo a transportista.]
+
+.right-column[
+.panelset[
+
+.panel[.panel-name[2021]
+
+```{r Cuadros_2017_2021, echo=FALSE, fig.height=5, fig.width=2, message=FALSE, warning=FALSE, tidy=T}
+
+library(DT)
+
+t_inc_17_21<- Carpetas_FGJ %>% group_by(ao_hechos, categoria_delito) %>% summarise(Freq=n())
+
+colnames(t_inc_17_21)<- c("Año", "Categoría del delito", "Número de Carpetas")
+
+t_inc_17_21$`Categoría del delito`[t_inc_17_21$`Categoría del delito` == "ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA"] <- "ROBO A PASAJERO A BORDO DEL METRO CON VIOLENCIA"
+
+t_inc_17_21$`Categoría del delito`[t_inc_17_21$`Categoría del delito` == "ROBO DE VEHÍCULO CON Y SIN VIOLENCIA"] <- "ROBO DE VEHÍCULO CON VIOLENCIA"
+
+
+
+# datatable(t_inc_17_21, width = '55%', filter = 'top',
+#               options = list(pageLength = 4, autoWidth = TRUE, initComplete = JS(
+#     "function(settings, json) {",
+#     "$('body').css({'font-family': 'Calibri'});",
+#     "}"))) %>%
+#   formatStyle('Año',  backgroundColor = "#fc2474", fontWeight = 'bold')
+
+
+t_inc_17<- filter(t_inc_17_21, Año ==2017)
+t_inc_18<- filter(t_inc_17_21, Año ==2018)
+t_inc_19<- filter(t_inc_17_21, Año ==2019)
+t_inc_20<- filter(t_inc_17_21, Año ==2020)
+t_inc_21<- filter(t_inc_17_21, Año ==2021)
+
+library(kableExtra)
+
+t_inc_21 %>%
+  kbl(caption = "Incidencia Delictiva 2021") %>%
+  kable_styling() %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7")
+
+
+
+```
+]
+
+.panel[.panel-name[2020]
+
+```{r Cuadros_2020, echo=FALSE, fig.height=5, fig.width=2, message=FALSE, warning=FALSE, tidy=T}
+t_inc_20 %>%
+  kbl(caption = "Incidencia Delictiva 2020") %>%
+  kable_styling() %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7")
+
+```
+]
+
+
+.panel[.panel-name[2019]
+```{r Cuadros_2019, echo=FALSE, fig.height=5, fig.width=2, message=FALSE, warning=FALSE, tidy=T}
+t_inc_19 %>%
+  kbl(caption = "Incidencia Delictiva 2019") %>%
+  kable_styling() %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7")
+
+```
+
+]
+
+.panel[.panel-name[2018]
+```{r Cuadros_2018, echo=FALSE, fig.height=5, fig.width=2, message=FALSE, warning=FALSE, tidy=T}
+t_inc_18 %>%
+  kbl(caption = "Incidencia Delictiva 2018") %>%
+  kable_styling() %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7")
+
+```
+
+]
+
+.panel[.panel-name[2017]
+```{r Cuadros_2017, echo=FALSE, fig.height=5, fig.width=2, message=FALSE, warning=FALSE, tidy=T}
+
+t_inc_17 %>%
+  kbl(caption = "Incidencia Delictiva 2017") %>%
+  kable_styling() %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7")
+```
+]
+]
+]
+
+---
+
+# Panorama General
+En términos absolutos, la incidencia delictiva ha disminuido. A pesar del repunte en los niveles de criminalidad en el año 2018 se ha logrado disminuir el número de hechos delictivos, llegando a niveles inferiores a los observados en el 2017. Esto sucede tanto para personas de sexo masculino, como femenino.
+
+```{r Incidencia_2017_2021, message=FALSE, warning=FALSE, include=FALSE, tidy=T}
+library(viridis)
+
+s1<-ggplot(Carpetas_FGJ, aes(x=categoria_delito, group=ao_hechos, fill=ao_hechos)) +
+   geom_histogram(stat = "count", color="#000000", binwidth=.5, position="dodge") +
+   scale_fill_viridis("año", discrete=F, option = "inferno") +
+   scale_color_viridis("año", discrete=F, option = "inferno") +
+   coord_flip() +
+   scale_x_discrete(labels = c("ROBO DE VEHÍCULO\nCON VIOLENCIA",
+                               "ROBO A\nTRANSPORTISTA", "ROBO A PASAJERO\nA BORDO DE METRO",
+                               "HOMICIDIO DOLOSO")
+   )
+                    
+                    
+s1<-s1 + ylab("ACUMULADO ANUAL\nCARPETAS DE INVESTIGACIÓN") + xlab("") + ggtitle("DELITOS") + theme_elegante()
+
+
+
+s2<-ggplot(Victimas_FGJ, aes(x=Sexo, group=Año_hecho, fill=Año_hecho)) +
+   geom_histogram(stat = "count", color="#000000", binwidth=.5, position="dodge") +
+   scale_fill_viridis("año", discrete=F, option = "inferno") +
+   scale_color_viridis("año", discrete=F, option = "inferno") + 
+   coord_flip()
+                    
+                    
+s2<-s2 + ylab("ACUMULADO ANUAL\nVÍCTIMAS DE DELITO") + xlab("") + ggtitle("VÍCTIMAS POR SEXO.") + theme_elegante()
+
+library(gridExtra)
+```
+.pull-left[
+```{r message=FALSE, warning=FALSE, fig.height = 5}
+s1
+
+```
+]
+
+.pull-right[
+```{r message=FALSE, warning=FALSE, fig.height = 5}
+s2
+
+```
+]
+---
+
+
+# Analisis por mes de ocurrencia.
+El siguiente analisis esta enfocado en encontrar patrones temporales en la incidencia delictiva durante el periodo 2018-2021.
+
+.panelset[
+.panel[.panel-name[Homicidio Doloso]
+.pull-left[
+```{r MES_hom, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 4}
+Carpetas_FGJ<-filter(Carpetas_FGJ, ao_hechos %in% c(2018:2021))
+
+
+del_x_mes<- Carpetas_FGJ %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+
+del_x_mes$promedio<- del_x_mes$Freq/4
+
+
+mes_hom<-filter(del_x_mes, categoria_delito =="HOMICIDIO DOLOSO")
+
+mes_hom %>%
+  arrange(Freq)  %>%
+  mutate(name = fct_reorder(mes_hechos, Freq)) %>%
+  ggplot( aes(x = factor(mes_hechos, level = c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')),
+              y=Freq)) +
+    geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+    coord_flip() +
+    xlab("") +
+    geom_point(data = mes_hom, aes(x = factor(mes_hechos, level = c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')),
+                                 y=promedio)) +
+    theme_elegante() + ggtitle("Homicidio Doloso. 2018-2021.") + ylab("Número de carpetas")
+
+```
+]
+.pull-right[
+```{r MES_hom_t, echo=FALSE, message=FALSE, warning=FALSE, tidy=T}
+
+
+del_x_mes<- Carpetas_FGJ %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+orden_mes<-c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')
+
+colnames(mes_hom)<-c("Mes","Categoría", "Acumulado de Carpetas", "Promedio")
+
+mes_hom<-mes_hom[match(orden_mes, mes_hom$Mes),]
+
+
+hom_2018<- filter(Carpetas_FGJ, ao_hechos == 2018)
+hom_2018<- hom_2018 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+hom_2018<-filter(hom_2018, categoria_delito =="HOMICIDIO DOLOSO")
+hom_2018<-hom_2018[match(orden_mes, hom_2018$mes_hechos),]
+
+hom_2019<- filter(Carpetas_FGJ, ao_hechos == 2019)
+hom_2019<- hom_2019 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+hom_2019<-filter(hom_2019, categoria_delito =="HOMICIDIO DOLOSO")
+hom_2019<-hom_2019[match(orden_mes, hom_2019$mes_hechos),]
+
+
+hom_2020<- filter(Carpetas_FGJ, ao_hechos == 2020)
+hom_2020<- hom_2020 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+hom_2020<-filter(hom_2020, categoria_delito =="HOMICIDIO DOLOSO")
+hom_2020<-hom_2020[match(orden_mes, hom_2020$mes_hechos),]
+
+
+hom_2021<- filter(Carpetas_FGJ, ao_hechos == 2021)
+hom_2021<- hom_2021 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+hom_2021<-filter(hom_2021, categoria_delito =="HOMICIDIO DOLOSO")
+
+SS<-data.frame(mes_hechos=c('Agosto','Septiembre', 'Octubre','Noviembre', 'Diciembre'),
+              categoria_delito=c('HOMICIDIO DOLOSO','HOMICIDIO DOLOSO','HOMICIDIO DOLOSO',
+                               'HOMICIDIO DOLOSO','HOMICIDIO DOLOSO'),
+              Freq=c(as.integer('NA','NA','NA','NA','NA')))
+
+hom_2021<-rbind(hom_2021, SS)
+hom_2021<-hom_2021[match(orden_mes, hom_2021$mes_hechos),]
+
+mes_hom$'2018'<-hom_2018$Freq
+mes_hom$'2019'<-hom_2019$Freq
+mes_hom$'2020'<-hom_2020$Freq
+mes_hom$'2021'<-hom_2021$Freq
+
+
+mes_hom%>%
+  kbl(caption = "Homicidio Doloso. 2018-2021") %>%
+  kable_styling(font_size = 7) %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7") %>%
+  scroll_box()
+```
+]
+]
+.panel[.panel-name[Robo a vehículo con violencia]
+.pull-left[
+```{r MES_veh, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 4}
+Carpetas_FGJ<-filter(Carpetas_FGJ, ao_hechos %in% c(2018:2021))
+
+
+del_x_mes<- Carpetas_FGJ %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+
+del_x_mes$promedio<- del_x_mes$Freq/4
+
+
+mes_rob<-filter(del_x_mes, categoria_delito =="ROBO DE VEHÍCULO CON Y SIN VIOLENCIA")
+
+mes_rob %>%
+  arrange(Freq)  %>%
+  mutate(name = fct_reorder(mes_hechos, Freq)) %>%
+  ggplot( aes(x = factor(mes_hechos, level = c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')),
+              y=Freq)) +
+    geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+    coord_flip() +
+    xlab("") +
+    geom_point(data = mes_rob, aes(x = factor(mes_hechos, level = c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')),
+                                 y=promedio)) +
+    theme_elegante() + ggtitle("Robo de vehículo con violencia.\n2018-2021.") + ylab("Número de carpetas")
+
+```
+]
+.pull-right[
+```{r MES_veh_t, echo=FALSE, message=FALSE, warning=FALSE, tidy=T}
+
+
+del_x_mes<- Carpetas_FGJ %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+orden_mes<-c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')
+
+colnames(mes_rob)<-c("Mes","Categoría", "Acumulado de Carpetas", "Promedio")
+
+mes_rob<-mes_rob[match(orden_mes, mes_rob$Mes),]
+
+
+rob_2018<- filter(Carpetas_FGJ, ao_hechos == 2018)
+rob_2018<- rob_2018 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+rob_2018<-filter(rob_2018, categoria_delito =="ROBO DE VEHÍCULO CON Y SIN VIOLENCIA")
+rob_2018<-rob_2018[match(orden_mes, rob_2018$mes_hechos),]
+
+rob_2019<- filter(Carpetas_FGJ, ao_hechos == 2019)
+rob_2019<- rob_2019 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+rob_2019<-filter(rob_2019, categoria_delito =="ROBO DE VEHÍCULO CON Y SIN VIOLENCIA")
+rob_2019<-rob_2019[match(orden_mes, rob_2019$mes_hechos),]
+
+
+rob_2020<- filter(Carpetas_FGJ, ao_hechos == 2020)
+rob_2020<- rob_2020 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+rob_2020<-filter(rob_2020, categoria_delito =="ROBO DE VEHÍCULO CON Y SIN VIOLENCIA")
+rob_2020<-rob_2020[match(orden_mes, rob_2020$mes_hechos),]
+
+
+rob_2021<- filter(Carpetas_FGJ, ao_hechos == 2021)
+rob_2021<- rob_2021 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+rob_2021<-filter(rob_2021, categoria_delito =="ROBO DE VEHÍCULO CON Y SIN VIOLENCIA")
+
+SS<-data.frame(mes_hechos=c('Agosto','Septiembre', 'Octubre','Noviembre', 'Diciembre'),
+              categoria_delito=c('ROBO DE VEHÍCULO CON Y SIN VIOLENCIA','ROBO DE VEHÍCULO CON Y SIN VIOLENCIA','ROBO DE VEHÍCULO CON Y SIN VIOLENCIA',
+                               'ROBO DE VEHÍCULO CON Y SIN VIOLENCIA','ROBO DE VEHÍCULO CON Y SIN VIOLENCIA'),
+              Freq=c(as.integer('NA','NA','NA','NA','NA')))
+
+rob_2021<-rbind(rob_2021, SS)
+rob_2021<-rob_2021[match(orden_mes, rob_2021$mes_hechos),]
+
+mes_rob$'2018'<-rob_2018$Freq
+mes_rob$'2019'<-rob_2019$Freq
+mes_rob$'2020'<-rob_2020$Freq
+mes_rob$'2021'<-rob_2021$Freq
+
+mes_rob$Categoría[mes_rob$Categoría == "ROBO DE VEHÍCULO CON Y SIN VIOLENCIA"] <- "ROBO DE VEHÍCULO CON VIOLENCIA"
+
+
+mes_rob%>%
+  kbl(caption = "Robo de vehículo con violencia. 2018-2021") %>%
+  kable_styling(font_size = 7) %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7") %>%
+  scroll_box()
+```
+]
+]
+
+
+.panel[.panel-name[Robo a pasajero a bordo de metro]
+.pull-left[
+```{r MES_metro, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 4}
+Carpetas_FGJ<-filter(Carpetas_FGJ, ao_hechos %in% c(2018:2021))
+
+
+del_x_mes<- Carpetas_FGJ %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+
+del_x_mes$promedio<- del_x_mes$Freq/4
+
+
+mes_met<-filter(del_x_mes, categoria_delito =="ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA")
+
+mes_met %>%
+  arrange(Freq)  %>%
+  mutate(name = fct_reorder(mes_hechos, Freq)) %>%
+  ggplot( aes(x = factor(mes_hechos, level = c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')),
+              y=Freq)) +
+    geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+    coord_flip() +
+    xlab("") +
+    geom_point(data = mes_met, aes(x = factor(mes_hechos, level = c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')),
+                                 y=promedio)) +
+    theme_elegante() + ggtitle("Robo a pasajero a bordo de metro.\n2018-2021.") + ylab("Número de carpetas")
+
+```
+]
+.pull-right[
+```{r MES_metro_t, echo=FALSE, message=FALSE, warning=FALSE, tidy=T}
+
+
+del_x_mes<- Carpetas_FGJ %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+orden_mes<-c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')
+
+colnames(mes_met)<-c("Mes","Categoría", "Acumulado de Carpetas", "Promedio")
+
+mes_met<-mes_met[match(orden_mes, mes_met$Mes),]
+
+
+met_2018<- filter(Carpetas_FGJ, ao_hechos == 2018)
+met_2018<- met_2018 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+met_2018<-filter(met_2018, categoria_delito =="ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA")
+met_2018<-met_2018[match(orden_mes, met_2018$mes_hechos),]
+
+met_2019<- filter(Carpetas_FGJ, ao_hechos == 2019)
+met_2019<- met_2019 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+met_2019<-filter(met_2019, categoria_delito =="ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA")
+met_2019<-met_2019[match(orden_mes, met_2019$mes_hechos),]
+
+
+met_2020<- filter(Carpetas_FGJ, ao_hechos == 2020)
+met_2020<- met_2020 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+met_2020<-filter(met_2020, categoria_delito =="ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA")
+met_2020<-met_2020[match(orden_mes, met_2020$mes_hechos),]
+
+
+met_2021<- filter(Carpetas_FGJ, ao_hechos == 2021)
+met_2021<- met_2021 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+met_2021<-filter(met_2021, categoria_delito =="ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA")
+
+SS<-data.frame(mes_hechos=c('Agosto','Septiembre', 'Octubre','Noviembre', 'Diciembre'),
+              categoria_delito=c('ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA','ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA','ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA',
+                               'ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA','ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA'),
+              Freq=c(as.integer('NA','NA','NA','NA','NA')))
+
+met_2021<-rbind(met_2021, SS)
+met_2021<-met_2021[match(orden_mes, met_2021$mes_hechos),]
+
+mes_met$'2018'<-met_2018$Freq
+mes_met$'2019'<-met_2019$Freq
+mes_met$'2020'<-met_2020$Freq
+mes_met$'2021'<-met_2021$Freq
+
+# mes_met$Categoría[mes_met$Categoría == "ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA"] <- "ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA"
+
+
+mes_met%>%
+  kbl(caption = "Robo a pasajero a bordo de metro. 2018-2021") %>%
+  kable_styling(font_size = 7) %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7") %>%
+  scroll_box()
+```
+]
+]
+
+
+.panel[.panel-name[Robo a transportista]
+.pull-left[
+```{r MES_transp, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 4}
+Carpetas_FGJ<-filter(Carpetas_FGJ, ao_hechos %in% c(2018:2021))
+
+
+del_x_mes<- Carpetas_FGJ %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+
+del_x_mes$promedio<- del_x_mes$Freq/4
+
+
+mes_tra<-filter(del_x_mes, categoria_delito =="ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA")
+
+mes_tra %>%
+  arrange(Freq)  %>%
+  mutate(name = fct_reorder(mes_hechos, Freq)) %>%
+  ggplot( aes(x = factor(mes_hechos, level = c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')),
+              y=Freq)) +
+    geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+    coord_flip() +
+    xlab("") +
+    geom_point(data = mes_tra, aes(x = factor(mes_hechos, level = c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')),
+                                 y=promedio)) +
+    theme_elegante() + ggtitle("Robo a transportista. 2018-2021.") + ylab("Número de carpetas")
+
+```
+]
+.pull-right[
+```{r MES_transp_t, echo=FALSE, message=FALSE, warning=FALSE, tidy=T}
+
+
+del_x_mes<- Carpetas_FGJ %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+orden_mes<-c('Enero','Febrero', 'Marzo','Abril','Mayo',
+                                               'Junio','Julio','Agosto','Septiembre',
+                                               'Octubre','Noviembre', 'Diciembre')
+
+colnames(mes_tra)<-c("Mes","Categoría", "Acumulado de Carpetas", "Promedio")
+
+mes_tra<-mes_tra[match(orden_mes, mes_tra$Mes),]
+
+
+tra_2018<- filter(Carpetas_FGJ, ao_hechos == 2018)
+tra_2018<- tra_2018 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+tra_2018<-filter(tra_2018, categoria_delito =="ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA")
+tra_2018<-tra_2018[match(orden_mes, tra_2018$mes_hechos),]
+
+tra_2019<- filter(Carpetas_FGJ, ao_hechos == 2019)
+tra_2019<- tra_2019 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+tra_2019<-filter(tra_2019, categoria_delito =="ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA")
+tra_2019<-tra_2019[match(orden_mes, tra_2019$mes_hechos),]
+
+
+tra_2020<- filter(Carpetas_FGJ, ao_hechos == 2020)
+tra_2020<- tra_2020 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+tra_2020<-filter(tra_2020, categoria_delito =="ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA")
+tra_2020<-tra_2020[match(orden_mes, tra_2020$mes_hechos),]
+
+
+tra_2021<- filter(Carpetas_FGJ, ao_hechos == 2021)
+tra_2021<- tra_2021 %>% group_by(mes_hechos, categoria_delito) %>% summarise(Freq=n())
+tra_2021<-filter(tra_2021, categoria_delito =="ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA")
+
+SS<-data.frame(mes_hechos=c('Agosto','Septiembre', 'Octubre','Noviembre', 'Diciembre'),
+              categoria_delito=c('ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA','ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA','ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA',
+                               'ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA','ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA'),
+              Freq=c(as.integer('NA','NA','NA','NA','NA')))
+
+tra_2021<-rbind(tra_2021, SS)
+tra_2021<-tra_2021[match(orden_mes, tra_2021$mes_hechos),]
+
+mes_tra$'2018'<-tra_2018$Freq
+mes_tra$'2019'<-tra_2019$Freq
+mes_tra$'2020'<-tra_2020$Freq
+mes_tra$'2021'<-tra_2021$Freq
+
+# mes_tra$Categoría[mes_tra$Categoría == "ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA"] <- "ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA"
+
+
+mes_tra%>%
+  kbl(caption = "Robo a transportista. 2018-2021") %>%
+  kable_styling(font_size = 7) %>%
+  kable_paper("striped", full_width = F) %>%
+  column_spec(1, background = "#ff73a7") %>%
+  scroll_box()
+```
+]
+]
+
+
+
+
+
+]
+
+---
+
+class: inverse, middle, center
+
+# Principales hallazgos
+.left[Homicidio Doloso]
+.right[- El mes con mayor incidencia de homicidios es marzo, no obstante, para 2021 mayo es el que acumula más carpetas.
+- El año 2021 resulta ser el que menos homicidios dolosos presenta, siendo esta cifra inferior al promedio mensual de los últimos cuatro años]
+.left[Robo de vehículo con violencia]
+.right[- El mes con mayor incidencia de robos con violencia es marzo, de igual forma la incidencia de este delito ha ido a la baja, con cifras mensuales inferiores al promedio y a los periodos previos.
+-]
+---
+class: inverse, middle, center
+
+# Principales hallazgos
+.left[Robo a pasajero a bordo de metro]
+.right[- El mes con mayor número de incidentes en febrero. Este delito es el que presenta un comportamiento temporal más marcado teniendo una tendencia a la baja conforme pasan los meses.
+- En esta categoría, a pesar de que las cifras son inferiores al promedio, tenemos que hay un incremento respecto al mes del periodo anterior a parir del mes de abril]
+.left[Robo a transportista]
+.right[- Los meses con mayores incidentes son febrero y noviembre
+- Este delito presenta un crecimiento respecto al periodo anterior, y para el año 2021 presente incidencias superiores a la media.]
+**El robo a transportista es el incidente delictivo que requiere de una mayor atención**
+
+---
+
+# Variación respecto al mismo mes del año anterior
+.panelset[
+.panel[.panel-name[Homicidio Doloso]
+.pull-left[
+
+```{r variacion_delegacion, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+Victimas_FGJ2<-filter(Victimas_FGJ, Año_hecho %in% c(2020:2021))
+
+Carpetas_FGJ <- Carpetas_FGJ %>%
+  rename(Año_hecho = ao_hechos) 
+Carpetas_FGJ2<-filter(Carpetas_FGJ, Año_hecho %in% c(2020:2021))
+
+jul_20<- filter(Carpetas_FGJ2, Año_hecho == 2020 & mes_hechos %in% c("Julio"))
+jul_20<- jul_20 %>% group_by(alcaldia_hechos, categoria_delito) %>% summarise(Freq=n())
+
+jul_20$region <- ifelse(jul_20$alcaldia_hechos == "ALVARO OBREGON",  09010,
+                  ifelse(jul_20$alcaldia_hechos == "COYOACAN"   , 09003,
+                  ifelse(jul_20$alcaldia_hechos == "AMECAMECA",   15009,
+                   ifelse(jul_20$alcaldia_hechos ==  "AZCAPOTZALCO" ,   09002,
+                    ifelse(jul_20$alcaldia_hechos == "BENITO JUAREZ"  , 09014,
+                     ifelse(jul_20$alcaldia_hechos == "BRISEÑAS" , 16011,
+                      ifelse(jul_20$alcaldia_hechos == "CHALCO"    ,  15025,
+                       ifelse(jul_20$alcaldia_hechos == "CHIMALHUACAN"   , 15031,
+                        ifelse(jul_20$alcaldia_hechos == "IZTAPALAPA" ,  09007,
+                 ifelse(jul_20$alcaldia_hechos == "CUAUTITLAN IZCALLI" ,  15121,
+                  ifelse(jul_20$alcaldia_hechos == "ECATEPEC DE MORELOS" , 15033,
+                   ifelse(jul_20$alcaldia_hechos ==  "GUSTAVO A MADERO"  ,  09005,
+                    ifelse(jul_20$alcaldia_hechos == "HUITZILAC" ,   17009, 
+                     ifelse(jul_20$alcaldia_hechos == "IZTACALCO" ,  09006,
+                      ifelse(jul_20$alcaldia_hechos == "LA MAGDALENA CONTRERAS", 09008,
+                       ifelse(jul_20$alcaldia_hechos == "MIGUEL HIDALGO"  ,  09016,
+                        ifelse(jul_20$alcaldia_hechos == "MILPA ALTA" ,   09009,
+                         ifelse(jul_20$alcaldia_hechos == "MORELOS"  ,    07101,
+                       ifelse(jul_20$alcaldia_hechos == "NAUCALPAN DE JUAREZ"  , 15057,
+                        ifelse(jul_20$alcaldia_hechos == "NEZAHUALCOYOTL"  , 15058,
+                         ifelse(jul_20$alcaldia_hechos == "NICOLAS ROMERO" , 15060,
+                       ifelse(jul_20$alcaldia_hechos == "RAFAEL DELGADO" , 30135,
+                        ifelse(jul_20$alcaldia_hechos == "TECAMAC"  ,  07102,  
+                          ifelse(jul_20$alcaldia_hechos == "TLAHUAC"    , 09011,
+                       ifelse(jul_20$alcaldia_hechos == "TLALNEPANTLA DE BAZ" , 15104,
+                        ifelse(jul_20$alcaldia_hechos == "TLALPAN"  ,   09012,
+                                 ifelse(jul_20$alcaldia_hechos == "VENUSTIANO CARRANZA" ,  09017,
+                       ifelse(jul_20$alcaldia_hechos == "XOCHIMILCO"  , 09013,
+                              ifelse(jul_20$alcaldia_hechos == "CUAUHTEMOC"  , 09015,
+                          07102)))))))))))))))))))))))))))))
+
+jul_20$value<-jul_20$Freq
+
+hom_del_jul_20<- filter(jul_20, categoria_delito =="HOMICIDIO DOLOSO")
+
+mxmunicipio_choropleth(hom_del_jul_20, num_colors = 1,
+                       zoom = subset(df_mxmunicipio_2020, state_name %in% 
+                                       c("Ciudad de México"))$region,
+                       title = "Homicidios Dolosos Julio 2020",
+                       show_states = FALSE,
+                       legend = "Número de\ncarpetas") +theme_elegante()
+
+
+
+```
+
+]
+
+.pull-right[
+
+```{r variacion_delegacion2, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+
+
+jul_21<- filter(Carpetas_FGJ2, Año_hecho == 2021 & mes_hechos %in% c("Julio"))
+jul_21<- jul_21 %>% group_by(alcaldia_hechos, categoria_delito) %>% summarise(Freq=n())
+
+jul_21$region <- ifelse(jul_21$alcaldia_hechos == "ALVARO OBREGON",  09010,
+                  ifelse(jul_21$alcaldia_hechos == "COYOACAN"   , 09003,
+                  ifelse(jul_21$alcaldia_hechos == "AMECAMECA",   15009,
+                   ifelse(jul_21$alcaldia_hechos ==  "AZCAPOTZALCO" ,   09002,
+                    ifelse(jul_21$alcaldia_hechos == "BENITO JUAREZ"  , 09014,
+                     ifelse(jul_21$alcaldia_hechos == "BRISEÑAS" , 16011,
+                      ifelse(jul_21$alcaldia_hechos == "CHALCO"    ,  15025,
+                       ifelse(jul_21$alcaldia_hechos == "CHIMALHUACAN"   , 15031,
+                        ifelse(jul_21$alcaldia_hechos == "IZTAPALAPA" ,  09007,
+                 ifelse(jul_21$alcaldia_hechos == "CUAUTITLAN IZCALLI" ,  15121,
+                  ifelse(jul_21$alcaldia_hechos == "ECATEPEC DE MORELOS" , 15033,
+                   ifelse(jul_21$alcaldia_hechos ==  "GUSTAVO A MADERO"  ,  09005,
+                    ifelse(jul_21$alcaldia_hechos == "HUITZILAC" ,   17009, 
+                     ifelse(jul_21$alcaldia_hechos == "IZTACALCO" ,  09006,
+                      ifelse(jul_21$alcaldia_hechos == "LA MAGDALENA CONTRERAS", 09008,
+                       ifelse(jul_21$alcaldia_hechos == "MIGUEL HIDALGO"  ,  09016,
+                        ifelse(jul_21$alcaldia_hechos == "MILPA ALTA" ,   09009,
+                         ifelse(jul_21$alcaldia_hechos == "MORELOS"  ,    07101,
+                       ifelse(jul_21$alcaldia_hechos == "NAUCALPAN DE JUAREZ"  , 15057,
+                        ifelse(jul_21$alcaldia_hechos == "NEZAHUALCOYOTL"  , 15058,
+                         ifelse(jul_21$alcaldia_hechos == "NICOLAS ROMERO" , 15060,
+                       ifelse(jul_21$alcaldia_hechos == "RAFAEL DELGADO" , 30135,
+                        ifelse(jul_21$alcaldia_hechos == "TECAMAC"  ,  07102,  
+                          ifelse(jul_21$alcaldia_hechos == "TLAHUAC"    , 09011,
+                       ifelse(jul_21$alcaldia_hechos == "TLALNEPANTLA DE BAZ" , 15104,
+                        ifelse(jul_21$alcaldia_hechos == "TLALPAN"  ,   09012,
+                                 ifelse(jul_21$alcaldia_hechos == "VENUSTIANO CARRANZA" ,  09017,
+                       ifelse(jul_21$alcaldia_hechos == "XOCHIMILCO"  , 09013,
+                              ifelse(jul_21$alcaldia_hechos == "CUAUHTEMOC"  , 09015,
+                          07102)))))))))))))))))))))))))))))
+
+jul_21$value<-jul_21$Freq
+
+hom_del_jul_21<- filter(jul_21, categoria_delito =="HOMICIDIO DOLOSO")
+
+mxmunicipio_choropleth(hom_del_jul_21, num_colors = 1,
+                       zoom = subset(df_mxmunicipio_2020, state_name %in% 
+                                       c("Ciudad de México"))$region,
+                       title = "Homicidios Dolosos Julio 2021",
+                       show_states = FALSE,
+                       legend = "Número de\ncarpetas") +theme_elegante()
+
+
+
+```
+
+]
+]
+
+
+.panel[.panel-name[Robo a vehículo con violencia]
+.pull-left[
+```{r, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+rob_del_jul_20<-filter(jul_20, categoria_delito =="ROBO DE VEHÍCULO CON Y SIN VIOLENCIA")
+
+mxmunicipio_choropleth(rob_del_jul_20, num_colors = 1,
+                       zoom = subset(df_mxmunicipio_2020, state_name %in% 
+                                       c("Ciudad de México"))$region,
+                       title = "Robo a vehículo con violencia.\nJulio 2020",
+                       show_states = FALSE,
+                       legend = "Número de\ncarpetas") +theme_elegante()
+
+```
+
+]
+
+.pull-right[
+```{r, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+rob_del_jul_21<-filter(jul_21, categoria_delito =="ROBO DE VEHÍCULO CON Y SIN VIOLENCIA")
+
+mxmunicipio_choropleth(rob_del_jul_21, num_colors = 1,
+                       zoom = subset(df_mxmunicipio_2020, state_name %in% 
+                                       c("Ciudad de México"))$region,
+                       title = "Robo a vehículo con violencia.\nJulio 2021",
+                       show_states = FALSE,
+                       legend = "Número de\ncarpetas") +theme_elegante()
+
+```
+
+]
+]
+
+
+.panel[.panel-name[Robo a pasajero a bordo de metro]
+.pull-left[
+```{r, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+met_del_jul_20<-filter(jul_20, categoria_delito =="ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA")
+mxmunicipio_choropleth(met_del_jul_20, num_colors = 1,
+                       zoom = subset(df_mxmunicipio_2020, state_name %in% 
+                                       c("Ciudad de México"))$region,
+                       title = "Robo a pasajero a bordo de metro.\nJulio 2020",
+                       show_states = FALSE,
+                       legend = "Número de\ncarpetas") +theme_elegante()
+```
+
+]
+
+.pull-right[
+```{r, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+met_del_jul_21<-filter(jul_21, categoria_delito =="ROBO A PASAJERO A BORDO DEL METRO CON Y SIN VIOLENCIA")
+mxmunicipio_choropleth(met_del_jul_21, num_colors = 1,
+                       zoom = subset(df_mxmunicipio_2020, state_name %in% 
+                                       c("Ciudad de México"))$region,
+                       title = "Robo a pasajero a bordo de metro.\nJulio 2021",
+                       show_states = FALSE,
+                       legend = "Número de\ncarpetas") +theme_elegante()
+```
+
+]
+]
+
+.panel[.panel-name[Robo a transportista]
+.pull-left[
+```{r, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+tra_del_jul_20<- filter(jul_20, categoria_delito =="ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA")
+mxmunicipio_choropleth(tra_del_jul_20, num_colors = 1,
+                       zoom = subset(df_mxmunicipio_2020, state_name %in% 
+                                       c("Ciudad de México"))$region,
+                       title = "Robo a transportista. Julio 2020",
+                       show_states = FALSE,
+                       legend = "Número de\ncarpetas") +theme_elegante()
+```
+]
+.pull-right[
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+tra_del_jul_21<- filter(jul_21, categoria_delito =="ROBO A TRANSPORTISTA CON Y SIN VIOLENCIA")
+mxmunicipio_choropleth(tra_del_jul_21, num_colors = 1,
+                       zoom = subset(df_mxmunicipio_2020, state_name %in% 
+                                       c("Ciudad de México"))$region,
+                       title = "Robo a transportista. Julio 2021",
+                       show_states = FALSE,
+                       legend = "Número de\ncarpetas") +theme_elegante()
+```
+]
+]
+]
+
+---
+
+class: inverse, middle, center
+
+# Principales hallazgos
+.left[Homicidio Doloso]
+.right[- En Julio del 2020 la alcaldía con más incidentes fue Iztapalapa, con 24 homicidios, para julio del 2021 Iztapalapa se coloca en el segundo lugar con 16 homicidios, superada por la alcaldía Cuauhtémoc con 16 homicidios. Las alcaldías más seguras en julio de 2021 son Milpa Alta y Benito Juárez con un homicidio, cifra inferior a la reportada en el mes del periodo anterior]
+.left[Robo de vehículo con violencia]
+.right[- para este incidente tenemos que las alcaldías con mayores robos a automovilistas se mantienen constantes. Iztapalapa encabeza la lista de ambos periodos, con un incremento de 20 robos en julio de este año. le sigue la Gustavo A Madero con un incremento de 10 incidentes y Tlalpan con un incremento de 17 incidentes 
+- Las alcaldías con menos incidentes son Milpa Alta y la magdalena Contreras con el mismo número de e incidentes en ambos periodos]
+
+---
+
+class: inverse, middle, center
+
+# Principales hallazgos
+
+.left[Robo a pasajero a bordo de metro]
+.right[- La variación de este delito es poca, resalta la alcaldía de Cuauhtémoc con 18 robos en 2021, teniendo un incremento de 6 incidentes con respecto al mes de periodo previo. Es seguida por la Venustiano carranza con 9 incidentes en 2021, y un incremento en un incidente]
+.left[Robo a transportista]
+.right[-El robo a transportistas mejoro bastante con respecto al periodo previo, pues solamente se reportaron tres incidentes, uno para cada alcaldía (Gustavo a madero, miguel hidalgo y Tlalpan). esto es significativo, pues el periodo anterior presento 12 incidentes. 
+- Iztapalapa desaparecido de la lista de robo a transportista en julio de este año]
+
+
+
+
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, tidy=T, fig.height = 5 }
+pob_2020 <- read.csv("poblacion_2020.csv", encoding = "UTF-8")
+
+pob_2020 <- pob_2020 %>%
+  rename(region = X.U.FEFF.region)
+
+CDMX_bbox <- getbb("Ciudad de Mexico")
+CDMX_bbox_poly <- getbb("Ciudad de Mexico", format_out = "sf_polygon")
+
+leaflet(CDMX_bbox_poly) %>%
+  addTiles() %>%
+  addPolygons()
+```
+
+
+
+ 
+---
+
+class: center, middle
+
+Presentación creada usando el paquete [**xaringan**](https://github.com/yihui/xaringan) en R.
+
+El *chakra* viene de [remark.js](https://remarkjs.com), [**knitr**](http://yihui.org/knitr), y [R Markdown](https://rmarkdown.rstudio.com).
+
+**El presente documento no representa las ideas o trabajo de la ADIP** 
